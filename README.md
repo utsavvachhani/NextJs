@@ -1,2 +1,2 @@
-# NextJs
-Study the NEXTJS
+# Next-Js-Study
+nothing
