@@ -1,0 +1,113 @@
+@import "tailwindcss";
+/* ================================
+   GLOBAL CSS VARIABLES
+   ================================ */
+
+:root {
+    /* Brand */
+    --brand-red: #FF2E2E;
+    --brand-red-hover: #E02626;
+    --brand-red-active: #CC1F1F;
+
+    /* Light Mode Backgrounds */
+    --bg-page: #F9FAFB;
+    --bg-card: #FFFFFF;
+    --bg-navbar: #FFFFFF;
+
+    /* Light Mode Text */
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-muted: #9CA3AF;
+
+    /* Borders & Shadows */
+    --border-color: #E5E7EB;
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 8px 20px rgba(255, 46, 46, 0.3);
+}
+
+/* ================================
+   DARK MODE VARIABLES
+   ================================ */
+
+[data-theme="dark"] {
+    --bg-page: #0F0F0F;
+    --bg-card: #181818;
+    --bg-navbar: #121212;
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #D1D5DB;
+    --text-muted: #9CA3AF;
+
+    --border-color: #1F1F1F;
+    --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* ================================
+   BASE RESET
+   ================================ */
+
+
+html,
+body {
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+
+/* ================================
+  button styles
+   ================================ */
+.btn {
+  padding: 0.6rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+}
+
+/* Primary Button */
+.btn-primary {
+  background-color: var(--brand-red);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-red-hover);
+}
+
+.btn-primary:active {
+  background-color: var(--brand-red-active);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--brand-red);
+  border: 2px solid var(--brand-red);
+}
+
+.btn-secondary:hover {
+  background-color: var(--brand-red);
+  color: #FFFFFF;
+}
+
+
+
+/* ================================
+   STATUS COLORS
+   ================================ */
+
+.success {
+    color: #22C55E;
+}
+
+.warning {
+    color: #FACC15;
+}
+
+.error {
+    color: #EF4444;
+}
