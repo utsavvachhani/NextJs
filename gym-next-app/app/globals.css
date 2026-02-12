@@ -1,13 +1,16 @@
 @import "tailwindcss";
+
 /* ================================
    GLOBAL CSS VARIABLES
    ================================ */
 
-:root {
-    /* Brand */
+@layer base {
+  :root {
+    /* Brand Colors */
     --brand-red: #FF2E2E;
     --brand-red-hover: #E02626;
     --brand-red-active: #CC1F1F;
+    --brand-yellow: #FFC107;
 
     /* Light Mode Backgrounds */
     --bg-page: #F9FAFB;
@@ -22,14 +25,15 @@
     /* Borders & Shadows */
     --border-color: #E5E7EB;
     --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.1);
     --shadow-hover: 0 8px 20px rgba(255, 46, 46, 0.3);
-}
+  }
 
-/* ================================
-   DARK MODE VARIABLES
-   ================================ */
+  /* ================================
+       DARK MODE VARIABLES
+       ================================ */
 
-[data-theme="dark"] {
+  [data-theme="dark"] {
     --bg-page: #0F0F0F;
     --bg-card: #181818;
     --bg-navbar: #121212;
@@ -40,74 +44,191 @@
 
     --border-color: #1F1F1F;
     --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.6);
-}
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.8);
+  }
 
-/* ================================
-   BASE RESET
-   ================================ */
+  /* ================================
+       BASE RESET & STYLES
+       ================================ */
 
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont;
+  html {
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+  }
+
+  html,
+  body {
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: var(--bg-page);
     color: var(--text-primary);
     transition: background-color 0.3s ease, color 0.3s ease;
-}
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.5;
+  }
 
+  body {
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-weight: inherit;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 100%;
+    line-height: inherit;
+    margin: 0;
+  }
+}
 
 /* ================================
-  button styles
+   COMPONENT STYLES
    ================================ */
-.btn {
-  padding: 0.6rem 1.4rem;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.25s ease;
+
+@layer components {
+
+  /* Button Base */
+  .btn {
+    padding: 0.6rem 1.4rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.25s ease;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    line-height: 1.5;
+  }
+
+  /* Primary Button */
+  .btn-primary {
+    background-color: var(--brand-red);
+    color: #FFFFFF;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--brand-red-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .btn-primary:active {
+    background-color: var(--brand-red-active);
+    transform: translateY(0);
+  }
+
+  /* Outline Button */
+  .btn-outline {
+    background-color: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-outline:hover {
+    background-color: var(--bg-card);
+    border-color: var(--brand-red);
+    color: var(--brand-red);
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--brand-red);
+    border: 2px solid var(--brand-red);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--brand-red);
+    color: #FFFFFF;
+  }
 }
-
-/* Primary Button */
-.btn-primary {
-  background-color: var(--brand-red);
-  color: #FFFFFF;
-}
-
-.btn-primary:hover {
-  background-color: var(--brand-red-hover);
-}
-
-.btn-primary:active {
-  background-color: var(--brand-red-active);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  background-color: transparent;
-  color: var(--brand-red);
-  border: 2px solid var(--brand-red);
-}
-
-.btn-secondary:hover {
-  background-color: var(--brand-red);
-  color: #FFFFFF;
-}
-
-
 
 /* ================================
-   STATUS COLORS
+   UTILITY STYLES
    ================================ */
 
-.success {
+@layer utilities {
+
+  /* Status Colors */
+  .success {
     color: #22C55E;
-}
+  }
 
-.warning {
+  .warning {
     color: #FACC15;
-}
+  }
 
-.error {
+  .error {
     color: #EF4444;
+  }
+
+  /* Container Override - ensure it works */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      max-width: 640px;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .container {
+      max-width: 768px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      max-width: 1024px;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container {
+      max-width: 1280px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .container {
+      max-width: 1536px;
+    }
+  }
 }
