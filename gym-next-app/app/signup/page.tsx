@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { signup, clearError } from "@/action/authSlice";
+import { AppDispatch, RootState } from "@/store";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -13,24 +16,32 @@ type SignUpData = {
   email: string;
   mobile: string;
   password: string;
-  confirmPassword: string;
+  confirmedPassword: string;
 };
 
 const SignUpPage: React.FC = () => {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error: reduxError } = useSelector((state: RootState) => state.auth);
+
   const [formData, setFormData] = useState<SignUpData>({
     firstName: "",
     lastName: "",
     email: "",
     mobile: "",
     password: "",
-    confirmPassword: "",
+    confirmedPassword: "",
   });
+
   const [showPassword, setShowPassword] = useState({
     password: false,
-    confirmPassword: false,
+    confirmedPassword: false,
   });
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -38,23 +49,13 @@ const SignUpPage: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    const { firstName, lastName, email, mobile, password, confirmPassword } =
-      formData;
+    const { firstName, lastName, email, mobile, password, confirmedPassword } = formData;
 
     const nameRegex = /^[A-Za-z]+$/;
-    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const mobileRegex = /^[0-9]{10}$/;
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/;
 
-    if (
-      !firstName ||
-      !lastName ||
-      !email ||
-      !mobile ||
-      !password ||
-      !confirmPassword
-    ) {
+    if (!firstName || !lastName || !email || !mobile || !password || !confirmedPassword) {
       setError("All fields are required.");
       return false;
     }
@@ -70,13 +71,11 @@ const SignUpPage: React.FC = () => {
       setError("Mobile number must be 10 digits.");
       return false;
     }
-    if (!passwordRegex.test(password)) {
-      setError(
-        "Password must be at least 8 characters with uppercase, lowercase, and a special character."
-      );
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return false;
     }
-    if (password !== confirmPassword) {
+    if (password !== confirmedPassword) {
       setError("Passwords do not match.");
       return false;
     }
@@ -84,19 +83,19 @@ const SignUpPage: React.FC = () => {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // Save to localStorage or send to API
-    const userPayload = { ...formData, createdAt: new Date().toISOString() };
-    console.log("SIGN UP DATA:", userPayload);
-
-    router.push("/signin");
+    const result = await dispatch(signup(formData));
+    if (signup.fulfilled.match(result)) {
+      localStorage.setItem("unverified_email", formData.email);
+      router.push("/otp");
+    }
   };
 
   const renderPasswordInput = (
-    field: "password" | "confirmPassword",
+    field: "password" | "confirmedPassword",
     placeholder: string
   ) => (
     <div className="relative">
@@ -138,7 +137,11 @@ const SignUpPage: React.FC = () => {
           Fill in your details to get started
         </p>
 
-        {error && <div className="mb-4 text-sm text-(--brand-red)">{error}</div>}
+        {(reduxError || error) && (
+          <div className="mb-4 text-sm text-(--brand-red)">
+            {reduxError || error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -150,7 +153,8 @@ const SignUpPage: React.FC = () => {
               placeholder="First Name"
               value={formData.firstName}
               onChange={handleChange}
-              className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none"
+              disabled={loading}
+              className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none disabled:opacity-50"
             />
             <input
               type="text"
@@ -158,7 +162,8 @@ const SignUpPage: React.FC = () => {
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleChange}
-              className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none"
+              disabled={loading}
+              className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none disabled:opacity-50"
             />
           </div>
 
@@ -169,7 +174,8 @@ const SignUpPage: React.FC = () => {
             placeholder="Gmail address"
             value={formData.email}
             onChange={handleChange}
-            className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none"
+            disabled={loading}
+            className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none disabled:opacity-50"
           />
 
           {/* Mobile */}
@@ -179,18 +185,20 @@ const SignUpPage: React.FC = () => {
             placeholder="Mobile number"
             value={formData.mobile}
             onChange={handleChange}
-            className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none"
+            disabled={loading}
+            className="w-full rounded-lg border border-(--border-color) px-3 py-2 text-(--text-primary) bg-(--bg-card) focus:border-(--brand-red) outline-none disabled:opacity-50"
           />
 
           {/* Password */}
           {renderPasswordInput("password", "Password")}
-          {renderPasswordInput("confirmPassword", "Confirm Password")}
+          {renderPasswordInput("confirmedPassword", "Confirm Password")}
 
           <button
             type="submit"
-            className="btn btn-primary w-full"
+            disabled={loading}
+            className="btn btn-primary w-full disabled:opacity-50"
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 

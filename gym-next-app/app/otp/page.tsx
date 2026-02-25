@@ -2,38 +2,49 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { verifyEmail, resendOTP, clearError } from "@/action/authSlice";
+import { AppDispatch, RootState } from "@/store";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 
 const OTPPage: React.FC = () => {
   const router = useRouter();
-  const OTP_LENGTH = 6;
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error: reduxError, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
+  const OTP_LENGTH = 6;
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
-  const [secondsLeft, setSecondsLeft] = useState(300); // 5 mins
+  const [secondsLeft, setSecondsLeft] = useState(300); // 5 minutes
   const [error, setError] = useState("");
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
-  // Auto-focus the first input on mount
   useEffect(() => {
+    dispatch(clearError());
     inputsRef.current[0]?.focus();
-  }, []);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
   // Timer countdown
   useEffect(() => {
     const interval = setInterval(() => {
-      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setSecondsLeft(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
     const value = e.target.value;
-    if (/^[0-9]?$/.test(value)) {
+
+    if (/^[a-zA-Z0-9]?$/.test(value)) {
       const newOtp = [...otp];
       newOtp[idx] = value;
       setOtp(newOtp);
 
-      // Move focus to next input
       if (value && idx < OTP_LENGTH - 1) {
         inputsRef.current[idx + 1]?.focus();
       }
@@ -44,14 +55,12 @@ const OTPPage: React.FC = () => {
     if (e.key === "Backspace" && !otp[idx] && idx > 0) {
       inputsRef.current[idx - 1]?.focus();
     }
-
-    // Submit on Enter if last input is filled
     if (e.key === "Enter" && idx === OTP_LENGTH - 1) {
-      handleSubmit(e as unknown as React.FormEvent<Element>);
+      handleSubmit(e as unknown as React.FormEvent);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpValue = otp.join("");
     if (otpValue.length < OTP_LENGTH) {
@@ -59,17 +68,26 @@ const OTPPage: React.FC = () => {
       return;
     }
     setError("");
-    console.log("Entered OTP:", otpValue);
-    // Verify OTP logic
-    router.push("/success");
+
+    const result = await dispatch(verifyEmail({ otp: otpValue }));
+    if (verifyEmail.fulfilled.match(result)) {
+      localStorage.removeItem("unverified_email");
+      router.push("/");
+    }
   };
 
   const handleResend = () => {
+    const email = localStorage.getItem("unverified_email");
+    if (!email) {
+      setError("Email not found. Please signup again.");
+      return;
+    }
     setOtp(Array(OTP_LENGTH).fill(""));
     setSecondsLeft(300);
-    console.log("OTP resent");
+    setError("");
+    dispatch(clearError());
+    dispatch(resendOTP(email));
     inputsRef.current[0]?.focus();
-    // Resend OTP API call
   };
 
   const minutes = Math.floor(secondsLeft / 60);
@@ -79,7 +97,6 @@ const OTPPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center px-4 bg-(--bg-page)">
       <div className="w-full max-w-md rounded-xl border border-(--border-color) bg-(--bg-card) shadow-(--shadow-sm) p-6 sm:p-8 text-center">
 
-        {/* Icon */}
         <div className="mb-6 flex justify-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full border border-(--border-color) bg-(--bg-page)">
             <AssignmentIndIcon sx={{ color: "var(--text-primary)" }} />
@@ -90,10 +107,10 @@ const OTPPage: React.FC = () => {
           Verify OTP
         </h1>
         <p className="text-sm text-(--text-secondary) mb-6">
-          Enter the 6-digit OTP sent to your email or mobile.
+          Enter the 6-digit OTP sent to your email.
         </p>
 
-        {error && <p className="text-(--brand-red) mb-4">{error}</p>}
+        {(reduxError || error) && <p className="text-(--brand-red) mb-4 text-sm">{reduxError || error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-between gap-2 mb-4">
@@ -103,12 +120,12 @@ const OTPPage: React.FC = () => {
                 type="text"
                 maxLength={1}
                 value={digit}
-                ref={(el) => {
-                  if (el) inputsRef.current[idx] = el;
-                }}
+                autoComplete="off"
+                disabled={loading}
+                ref={(el) => { if (el) inputsRef.current[idx] = el; }}
                 onChange={(e) => handleChange(e, idx)}
                 onKeyDown={(e) => handleKeyDown(e, idx)}
-                className="w-12 h-12 text-center text-(--text-primary) bg-(--bg-card) border border-(--border-color) rounded-lg text-lg focus:border-(--brand-red) outline-none"
+                className="w-12 h-12 text-center text-(--text-primary) bg-(--bg-card) border border-(--border-color) rounded-lg text-lg focus:border-(--brand-red) outline-none disabled:opacity-50"
               />
             ))}
           </div>
@@ -123,18 +140,21 @@ const OTPPage: React.FC = () => {
           <button
             type="button"
             onClick={handleResend}
-            disabled={seconds > 0}
-            className={`w-full btn rounded-lg ${
-              seconds === 0
-                ? "bg-(--brand-red) text-white"
-                : "bg-(--border-color) text-(--text-secondary) cursor-not-allowed"
-            }`}
+            disabled={secondsLeft > 0 || loading}
+            className={`w-full btn rounded-lg transition-colors py-2.5 font-semibold ${secondsLeft === 0
+              ? "bg-(--brand-red) text-white hover:bg-red-700"
+              : "bg-(--border-color) text-(--text-secondary) cursor-not-allowed opacity-50"
+              }`}
           >
             Resend OTP
           </button>
 
-          <button type="submit" className="w-full btn btn-primary">
-            Verify
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full btn btn-primary py-2.5 font-semibold transition-colors disabled:opacity-50"
+          >
+            {loading ? "Verifying..." : "Verify"}
           </button>
         </form>
       </div>

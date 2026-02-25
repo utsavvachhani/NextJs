@@ -1,5 +1,9 @@
 import "@/app/globals.css";
 import Navbar from "../components/navbar/Navbar";
+import { Providers } from "../components/Providers";
+import { AuthGuard } from "../components/AuthGuard";
+import CustomAlert from "../components/CustomAlert";
+
 
 export const metadata = {
   title: "Fitnezz - Your Fitness Journey Starts Here",
@@ -14,8 +18,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Navbar />
-        <main>{children}</main>
+        <Providers>
+          <AuthGuard>
+            <CustomAlert />
+            <Navbar />
+            <main>{children}</main>
+          </AuthGuard>
+        </Providers>
+
       </body>
     </html>
   );
