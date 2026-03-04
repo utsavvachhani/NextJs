@@ -12,9 +12,9 @@ import {
   updateProfile,
   getProfile,
   refreshTokenController,
-} from "../controllers/authController.js";
+} from "../controllers/auth.controller.js";
 
-import {authMiddleware} from "../middleware/authMiddleware.js";
+import {authMiddleware} from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 

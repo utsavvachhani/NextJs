@@ -15,6 +15,7 @@ import LightModeIcon from '@mui/icons-material/LightMode'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd'
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
+import ListAltIcon from '@mui/icons-material/ListAlt'
 
 function Navbar() {
     const dispatch = useDispatch<AppDispatch>();
@@ -193,6 +194,7 @@ function Navbar() {
                                                             <div className="w-5 flex justify-center text-[var(--text-secondary)] group-hover:text-[var(--brand-red)]">
                                                                 {item.label === "Profile" && <AssignmentIndIcon sx={{ fontSize: 18 }} />}
                                                                 {item.label === "Dashboard" && <FitnessCenterIcon sx={{ fontSize: 18 }} />}
+                                                                {item.label === "Todo" && <ListAltIcon sx={{ fontSize: 18 }} />}
                                                             </div>
                                                             {item.label}
                                                         </Link>
@@ -298,6 +300,7 @@ function Navbar() {
                                                 >
                                                     {item.label === "Profile" && <AssignmentIndIcon fontSize="small" />}
                                                     {item.label === "Dashboard" && <FitnessCenterIcon fontSize="small" />}
+                                                    {item.label === "Todo" && <ListAltIcon fontSize="small" />}
                                                     <span className="font-medium">{item.label}</span>
                                                 </Link>
                                             )

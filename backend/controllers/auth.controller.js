@@ -14,7 +14,7 @@ const generateAccessToken = (userId) => {
 };
 
 const generateRefreshToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_ACCESS_SECRET, {
+  return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET  , {
     expiresIn: "7d",
   });
 };
@@ -747,7 +747,7 @@ export const getProfile = async (req, res) => {
 export const refreshTokenController = (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
-
+console.log("Refresh Token Request:", refreshToken);
     if (!refreshToken) {
       return res.status(401).json({
         success: false,

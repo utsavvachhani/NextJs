@@ -1,4 +1,7 @@
-export  const authMiddleware = async (req, res, next) => {
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+
+export const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.accessToken;
 
@@ -14,7 +17,9 @@ export  const authMiddleware = async (req, res, next) => {
       process.env.JWT_ACCESS_SECRET
     );
 
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(decoded.id)
+      .select("-password")
+      .lean();
 
     if (!user) {
       return res.status(404).json({
@@ -23,7 +28,7 @@ export  const authMiddleware = async (req, res, next) => {
       });
     }
 
-    req.user = user; 
+    req.user = user;
     next();
 
   } catch (error) {

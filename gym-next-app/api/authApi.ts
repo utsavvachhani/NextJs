@@ -1,7 +1,9 @@
 import axios from "axios";
 
-const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000/api",
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+export const axiosInstance = axios.create({
+  baseURL: serverUrl,
   headers: {
     "Content-Type": "application/json",
   },
@@ -68,20 +70,66 @@ export const getCurrentUser = async () => {
 };
 
 // Response interceptor to handle token refresh
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+
+    // Check if the error is 401 and not already a retry
+    // Also ensure we don't try to refresh if the request itself is the refresh token request
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/auth/refresh-token") &&
+      !originalRequest.url?.includes("/auth/signin") &&
+      !originalRequest.url?.includes("/auth/logout")
+    ) {
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return axiosInstance(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
+
       try {
         await refreshTokenAPI();
+        processQueue(null);
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // Refresh token failed, user needs to login again
+        processQueue(refreshError);
+        // Optional: clear local storage if refresh fails
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("user");
+        }
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );

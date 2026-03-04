@@ -22,6 +22,10 @@ export const USER_MENU = [
     href: "/dashboard",
   },
   {
+    label: "Todo",
+    href: "/todo",
+  },
+  {
     label: "Sign Out",
     href: "/logout",
   },

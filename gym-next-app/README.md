@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fitnezz - Application Flow & Architecture
 
-## Getting Started
+This document explains the core structure and operational flow of the **Fitnezz** application, starting from the entry point.
 
-First, run the development server:
+## 1. Root Entry Point: `app/layout.tsx`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Every page in the application is wrapped by this layout. It's responsible for setting up the foundational structure:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **`Providers`**: Wraps the entire application with the Redux `Provider` for global state management.
+- **`AuthGuard`**: A critical component that monitors the user's authentication status across all pages.
+- **`CustomAlert`**: Displays global notifications (success/error) based on state.
+- **`Navbar`**: The universal navigation bar.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Global State Management: `store.ts` & `action/`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app uses **Redux Toolkit** to manage state centrally:
 
-## Learn More
+- **`store.ts`**: Configures the main store with `auth` and `alert` reducers.
+- **`authSlice.ts`**:
+  - Manages `user`, `loading`, and `isAuthenticated` state.
+  - Contains **Async Thunks** (`signin`, `signup`, `fetchCurrentUser`) that call backend APIs.
+- **`alertSlice.ts`**: Controls the visibility and content of the `CustomAlert` component.
 
-To learn more about Next.js, take a look at the following resources:
+## 3. The Authentication Lifecycle: `components/AuthGuard.tsx`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This component ensures the application stays secure:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **On Mount**: It checks if a user exists in the Redux state. If not, it dispatches `fetchCurrentUser()`.
+2. **Route Protection**: It contains a list of `publicRoutes`. If a user attempts to access a route NOT in that list (like `/dashboard`) without being authenticated, it automatically redirects them back to `/signin`.
 
-## Deploy on Vercel
+## 4. API Communication: `api/authApi.ts`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+All backend communication happens here using a pre-configured **Axios Instance**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Automatic Token Refresh**: The instance has a response interceptor. If a request fails with a `401 Unauthorized` (expired session), it automatically:
+  1. Pauses other outgoing requests.
+  2. Calls `/auth/refresh-token` to get a new session.
+  3. Retries the original failed request once the session is refreshed.
+  4. If refresh fails, it logs the user out and clears the local state.
+
+## 5. Application Routing: `app/` folder
+
+The app follows the Next.js App Router pattern:
+
+- **Public Pages**: `/signin`, `/signup`, `/forgot-password`, and the landing page (`/`).
+- **Private Pages**: `/dashboard`, `/profile`. These require a valid session and are protected by the `AuthGuard`.
+
+---
+
+### Execution Flow Summary:
+
+1. **User opens the app** → `layout.tsx` loads.
+2. **Redux Store initializes** via `Providers`.
+3. **`AuthGuard` triggers** → Checks session via `GET /auth/me`.
+4. **Backend responds** (e.g., `401 Unauthorized` because token is expired).
+5. **Axios Interceptor** catches `401` → Calls `/auth/refresh-token`.
+6. **Token Refreshed** → `GET /auth/me` is retried and succeeds.
+7. **Redux state updates** → User is authenticated, dashboard becomes accessible.
