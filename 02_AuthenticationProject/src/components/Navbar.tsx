@@ -1,87 +1,200 @@
-'use client'
-import React, { useState } from 'react'
-import Image from 'next/image'
-import "@/styles/globals.css"
-import { logoWhite, logoBlack } from '@/sources'
-import ThemeToggle from './theme-toggale/ThemeToggale'
-import { useTheme } from './theme-toggale/useTheme'
-import MenuIcon from '@mui/icons-material/Menu'
-import CloseIcon from '@mui/icons-material/Close'
-import { useRouter } from 'next/navigation'
+"use client"
 
-function Navbar() {
-  const { theme } = useTheme()
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const router = useRouter()
+import React, { useState, useEffect } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { usePathname } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
+import { Menu, X, LogOut, User, LayoutDashboard, ChevronRight } from "lucide-react"
+import { ThemeToggle } from "./ui/theme-toggle"
+import { logoWhite, logoBlack } from "@/sources"
+import { useTheme } from "next-themes"
+import { getSession, clearSession } from "@/lib/auth"
+import { toast } from "@/lib/toast-store"
 
-  const toggleMobileMenu = () => setMobileMenuOpen(!isMobileMenuOpen)
+const Navbar = () => {
+  const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [scrolled, setScrolled] = useState(false)
 
-  const handleNavigation = (path: string) => {
-    router.push(path)
-    setMobileMenuOpen(false)
+  useEffect(() => {
+    setMounted(true)
+    setUser(getSession())
+
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [pathname])
+
+  const handleLogout = () => {
+    clearSession()
+    setUser(null)
+    toast.success("Logged out successfully", { style: 'modern' })
+    window.location.href = "/"
   }
 
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "UI Components", href: "/#templates" },
+  ]
+
   return (
-    <nav className='navbar w-full bg-transparent px-4 py-3 shadow-md relative z-50'>
-      <div className='max-w-screen-xl mx-auto flex items-center justify-between p-7'>
+    <nav className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-7xl transition-all duration-300 ${scrolled
+      ? "bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-zinc-200 dark:border-zinc-800 shadow-lg py-2"
+      : "bg-transparent py-4"
+      } rounded-2xl border border-transparent`}>
+      <div className="px-6 flex items-center justify-between">
         {/* Logo */}
-        <div className='w-32 cursor-pointer' onClick={() => handleNavigation('/')}>
-          {
-            theme === 'dark' ?
-              <Image src={logoWhite} alt='Logo' width={128} height={48} />
-              :
-              <Image src={logoBlack} alt='Logo' width={128} height={48} />
-          }
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="relative h-8 w-32 overflow-hidden">
+            <Image
+              src={logoBlack}
+              alt="Logo"
+              fill
+              className="object-contain transition-transform duration-300 group-hover:scale-105 dark:hidden"
+              priority
+            />
+            <Image
+              src={logoWhite}
+              alt="Logo"
+              fill
+              className="object-contain transition-transform duration-300 group-hover:scale-105 hidden dark:block"
+              priority
+            />
+          </div>
+        </Link>
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className={`text-sm font-medium transition-colors hover:text-blue-500 ${pathname === link.href ? "text-blue-500" : "text-zinc-600 dark:text-zinc-400"
+                }`}
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
 
-        {/* Desktop Navigation */}
-        <div className='hidden md:block'>
-          <ul className='flex space-x-8 gap-5'>
-            <li onClick={() => handleNavigation('/')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Home</li>
-            <li onClick={() => handleNavigation('/about')} className='font-semibold text-lg cursor-pointer navbar-textHover'>About</li>
-            <li onClick={() => handleNavigation('/services')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Services</li>
-            <li onClick={() => handleNavigation('/contact')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Contact</li>
-          </ul>
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center gap-4">
+          <ThemeToggle />
+
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm font-medium text-red-500 hover:text-red-600"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/auth/perfect"
+                className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 px-4 py-2"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/perfect"
+                className="text-sm font-medium bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* Desktop Auth & ThemeToggle */}
-        <div className='hidden md:block'>
-          <ul className='flex space-x-8 gap-5 justify-center items-center'>
-            <li><ThemeToggle /></li>
-            <li onClick={() => handleNavigation('/login')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Login</li>
-            <li onClick={() => handleNavigation('/signup')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Sign Up</li>
-          </ul>
-        </div>
-
-        {/* Mobile Menu Icon */}
-        <div className='md:hidden block cursor-pointer' onClick={toggleMobileMenu}>
-          {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+        {/* Mobile Toggle */}
+        <div className="flex md:hidden items-center gap-3">
+          <ThemeToggle />
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2 text-zinc-600 dark:text-zinc-400"
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
       </div>
 
-      {/* Mobile Menu Sidebar */}
-      <div className={`
-        fixed top-15 flex justify-center right-0 h-full w-40 z-40 shadow-lg p-6 transform transition-transform duration-300 ease-in-out
-        ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
-      `}>
-        <ul className='flex flex-col space-y-6'>
-          <li onClick={() => handleNavigation('/')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Home</li>
-          <li onClick={() => handleNavigation('/about')} className='font-semibold text-lg cursor-pointer navbar-textHover'>About</li>
-          <li onClick={() => handleNavigation('/services')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Services</li>
-          <li onClick={() => handleNavigation('/contact')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Contact</li>
-          <li><ThemeToggle /></li>
-          <li onClick={() => handleNavigation('/login')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Login</li>
-          <li onClick={() => handleNavigation('/signup')} className='font-semibold text-lg cursor-pointer navbar-textHover'>Sign Up</li>
-        </ul>
-      </div>
-
-      {/* Optional Backdrop */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-opacity-100 z-30 md:hidden"
-          onClick={toggleMobileMenu}
-        />
-      )}
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 overflow-hidden"
+          >
+            <div className="p-6 flex flex-col gap-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="text-lg font-medium flex items-center justify-between"
+                >
+                  {link.name}
+                  <ChevronRight className="w-4 h-4 text-zinc-400" />
+                </Link>
+              ))}
+              <hr className="border-zinc-100 dark:border-zinc-800" />
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 text-lg font-medium"
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 text-lg font-medium text-red-500 text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href="/auth/perfect"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center py-3 font-medium border border-zinc-200 dark:border-zinc-800 rounded-xl"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/auth/perfect"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center py-3 font-medium bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }
