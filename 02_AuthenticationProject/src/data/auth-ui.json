@@ -1,0 +1,101 @@
+[
+  {
+    "id": 0,
+    "name": "✨ Perfect Auth UI",
+    "description": "The ultimate authentication layout combining split-screen focus, animated backgrounds, and enterprise-grade aesthetics.",
+    "route": "/auth/perfect",
+    "theme": "premium",
+    "features": ["Split Screen", "Animated Background", "Perfectly Working", "Next.js 15 Ready"],
+    "preview": "/assets/previews/perfect.jpg"
+  },
+  {
+    "id": 1,
+    "name": "Simple Clean UI",
+    "description": "A minimalist, centered card design focusing on simplicity and clarity. Perfect for most modern SaaS applications.",
+    "route": "/auth/type-1",
+    "theme": "minimal",
+    "features": ["Responsive", "Dark Mode", "Form Validation", "Minimalist Design"],
+    "preview": "/assets/previews/type-1.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Glassmorphism UI",
+    "description": "Modern frosted glass effect with vibrant accent colors. Uses backdrop filters and subtle borders for a premium feel.",
+    "route": "/auth/type-2",
+    "theme": "glass",
+    "features": ["Backdrop Blur", "Glass Effect", "Vibrant Gradients", "Modern UX"],
+    "preview": "/assets/previews/type-2.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Video Background UI",
+    "description": "Engaging login experience with a smooth, muted video background paired with a high-contrast form.",
+    "route": "/auth/type-3",
+    "theme": "video",
+    "features": ["Auto-play Video", "Overlay Filters", "High Contrast", "Dynamic Background"],
+    "preview": "/assets/previews/type-3.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Gradient Animated UI",
+    "description": "Eye-catching animated mesh gradients that move smoothly in the background, creating a lively interface.",
+    "route": "/auth/type-4",
+    "theme": "gradient",
+    "features": ["Mesh Gradients", "CSS Animations", "Lively Colors", "Smooth Transitions"],
+    "preview": "/assets/previews/type-4.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Split Screen UI",
+    "description": "Classic professional layout with an inspiring image on one side and a clean authentication form on the other.",
+    "route": "/auth/type-5",
+    "theme": "split",
+    "features": ["Dual Layout", "Image Showcase", "Professional Look", "Optimized Mobile View"],
+    "preview": "/assets/previews/type-5.jpg"
+  },
+  {
+    "id": 6,
+    "name": "Neumorphism UI",
+    "description": "Soft UI design using inner and outer shadows to create a tactile, 3D-like experience originating from skeuomorphism.",
+    "route": "/auth/type-6",
+    "theme": "neumorphism",
+    "features": ["Shadow Play", "Soft UI", "Tactile Buttons", "Unique Aesthetic"],
+    "preview": "/assets/previews/type-6.jpg"
+  },
+  {
+    "id": 7,
+    "name": "Corporate Army UI",
+    "description": "A bold, high-contrast 'hardcore' theme designed for military or high-security corporate environments.",
+    "route": "/auth/type-7",
+    "theme": "army",
+    "features": ["High Contrast", "Military Aesthetic", "Bold Typography", "Rugged Feel"],
+    "preview": "/assets/previews/type-7.jpg"
+  },
+  {
+    "id": 8,
+    "name": "Dark Premium SaaS UI",
+    "description": "Ultra-modern dark interface with subtle glows and neon accents. Designed for high-end developer tools and SaaS.",
+    "route": "/auth/type-8",
+    "theme": "premium",
+    "features": ["Neon Accents", "Subtle Glows", "Developer Focused", "Sleek Dark Mode"],
+    "preview": "/assets/previews/type-8.jpg"
+  },
+  {
+    "id": 9,
+    "name": "Floating Label UI",
+    "description": "Modern input interactions where labels float and shrink when focused, providing a smooth and intuitive UX.",
+    "route": "/auth/type-9",
+    "theme": "floating",
+    "features": ["Animated Labels", "Clean Inputs", "Interactive UX", "Minimalist"],
+    "preview": "/assets/previews/type-9.jpg"
+  },
+  {
+    "id": 10,
+    "name": "3D Animated UI",
+    "description": "Interactive authentication experience using 3D perspective transforms and motion tracking for a futuristic feel.",
+    "route": "/auth/type-10",
+    "theme": "3d",
+    "features": ["3D Perspective", "Hover Tracking", "Perspective Transforms", "Interactive Shadows"],
+    "preview": "/assets/previews/type-10.jpg"
+  }
+]
