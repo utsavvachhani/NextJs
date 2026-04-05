@@ -14,11 +14,11 @@ const generateAccessToken = (userId) => {
 };
 
 const generateRefreshToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET  , {
+  return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: "7d",
   });
 };
-  
+
 const verifySignupToken = (req) => {
   const token = req.cookies.accessToken;
 
@@ -26,14 +26,10 @@ const verifySignupToken = (req) => {
     throw new Error("Access token missing");
   }
 
-  const decoded = jwt.verify(
-    token,
-    process.env.JWT_ACCESS_SECRET
-  );
+  const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
   return decoded.id;
 };
-
 
 /* =======  HELPER: Cookies  ====== */
 const accessCookieOptions = {
@@ -85,7 +81,8 @@ const hashPassword = async (password) => {
 export const signup = async (req, res) => {
   console.log("Signup Request Body:", req.body); // Debug log
   try {
-    const { firstName, lastName, mobile, email, password, confirmedPassword } = req.body;
+    const { firstName, lastName, mobile, email, password, confirmedPassword } =
+      req.body;
 
     if (
       !firstName ||
@@ -119,7 +116,6 @@ export const signup = async (req, res) => {
     }
 
     const hashedPassword = await hashPassword(password);
-
 
     const newUser = await User.create({
       firstName,
@@ -156,13 +152,11 @@ export const signup = async (req, res) => {
 };
 
 /* =======  VERIFY EMAIL  ====== */
-export const verifyEmail = async (req, res) => 
-{
-  console.log("Verify Email Request Body:", req.body); 
+export const verifyEmail = async (req, res) => {
+  console.log("Verify Email Request Body:", req.body);
   try {
     const { otp } = req.body;
 
-    
     const userId = verifySignupToken(req);
     const user = await User.findById(userId);
 
@@ -206,10 +200,7 @@ export const verifyEmail = async (req, res) =>
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      otp,
-      otpRecord.otp
-    );
+    const isMatch = await bcrypt.compare(otp, otpRecord.otp);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -239,7 +230,6 @@ export const verifyEmail = async (req, res) =>
       email: user.email,
       mobile: user.mobile,
     });
-
   } catch (error) {
     console.error("Verify Email Error:", error);
 
@@ -278,10 +268,7 @@ export const signin = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -304,7 +291,6 @@ export const signin = async (req, res) => {
       email: user.email,
       mobile: user.mobile,
     });
-
   } catch (error) {
     console.error("Signin Error:", error);
 
@@ -353,11 +339,11 @@ export const resendOTP = async (req, res) => {
           success: false,
           message: "OTP already sent. Please wait until it expires.",
         });
-
       } catch (error) {
         // Token expired → allowed to resend
       }
-    }``
+    }
+    ``;
 
     await Otp.deleteMany({
       userId: user._id,
@@ -375,7 +361,6 @@ export const resendOTP = async (req, res) => {
       email: user.email,
       message: "OTP sent successfully",
     });
-
   } catch (error) {
     console.error("Resend OTP Error:", error);
 
@@ -440,7 +425,6 @@ export const forgotPassword = async (req, res) => {
       email: user.email,
       message: "OTP sent successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -485,10 +469,7 @@ export const verifyResetOtp = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      otp,
-      otpRecord.otp
-    );
+    const isMatch = await bcrypt.compare(otp, otpRecord.otp);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -500,7 +481,6 @@ export const verifyResetOtp = async (req, res) => {
     otpRecord.isUsed = true;
     await otpRecord.save();
 
-
     const resetToken = generateAccessToken(user._id);
     res.cookie("accessToken", resetToken, accessCookieOptions);
 
@@ -508,7 +488,6 @@ export const verifyResetOtp = async (req, res) => {
       success: true,
       message: "OTP verified. You can now reset password.",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -516,7 +495,6 @@ export const verifyResetOtp = async (req, res) => {
     });
   }
 };
-
 
 /* =======  FORGOT PASSWORD  ====== */
 export const resetPassword = async (req, res) => {
@@ -542,7 +520,6 @@ export const resetPassword = async (req, res) => {
 
     const user = await User.findById(userId);
 
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -563,7 +540,6 @@ export const resetPassword = async (req, res) => {
       success: true,
       message: "Password reset successful. Please signin.",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -602,10 +578,7 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      oldPassword,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -614,10 +587,7 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    const isSame = await bcrypt.compare(
-      newPassword,
-      user.password
-    );
+    const isSame = await bcrypt.compare(newPassword, user.password);
 
     if (isSame) {
       return res.status(400).json({
@@ -635,7 +605,6 @@ export const changePassword = async (req, res) => {
       success: true,
       message: "Password changed successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -647,56 +616,59 @@ export const changePassword = async (req, res) => {
 /* =======  UPDATE Profile  ====== */
 export const updateProfile = async (req, res) => {
   try {
-    const loggedInUser = req.user;
+    const userId = req.user._id;
+    const { bio, address, dateOfBirth, note, mobile } = req.body;
 
-    const {
-      photo,
-      bio,
-      address,
-      dateOfBirth,
-      note,
-    } = req.body;
-
-    // 1️⃣ Check verification
-    if (!loggedInUser.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email first",
-      });
+    // 1️⃣ Find user and update mobile if provided
+    if (mobile) {
+      const existingUser = await User.findOne({ mobile, _id: { $ne: userId } });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Mobile number already in use",
+        });
+      }
+      await User.findByIdAndUpdate(userId, { mobile });
     }
 
     // 2️⃣ Find profile
-    let profile = await Profile.findOne({
-      userId: loggedInUser._id,
-    });
+    let profile = await Profile.findOne({ userId });
 
     // 3️⃣ Auto create profile if not exists
     if (!profile) {
-      profile = new Profile({
-        userId: loggedInUser._id,
-      });
+      profile = new Profile({ userId });
     }
 
-    // 4️⃣ Update only provided fields
-    if (photo !== undefined) profile.photo = photo;
+    // 4️⃣ Update fields
     if (bio !== undefined) profile.bio = bio;
     if (address !== undefined) profile.address = address;
     if (dateOfBirth !== undefined) profile.dateOfBirth = dateOfBirth;
 
-    // 5️⃣ Add history
+    // 5️⃣ Handle Photo Upload
+    if (req.file) {
+      profile.photo = req.file.path; // Cloudinary URL
+    }
+
+    // 6️⃣ Add history
     profile.updatedHistory.push({
       note: note || "Profile updated",
     });
 
     await profile.save();
 
+    // Populate user info for response
+    const completeProfile = await Profile.findOne({ userId }).populate(
+      "userId",
+      "firstName lastName email mobile",
+    );
+
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      profile,
+      profile: completeProfile,
     });
-
   } catch (error) {
+    console.error("Update Profile Error:", error);
     return res.status(500).json({
       success: false,
       message: "Profile update failed",
@@ -707,20 +679,13 @@ export const updateProfile = async (req, res) => {
 /* =======  GET Profile  ====== */
 export const getProfile = async (req, res) => {
   try {
-    const loggedInUser = req.user;
+    const userId = req.user._id;
 
-    // 1️⃣ Check verification
-    if (!loggedInUser.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email first",
-      });
-    }
-
-    // 2️⃣ Find profile using userId
-    const profile = await Profile.findOne({
-      userId: loggedInUser._id,
-    });
+    // 1️⃣ Find profile using userId and populate user details
+    const profile = await Profile.findOne({ userId }).populate(
+      "userId",
+      "firstName lastName email mobile",
+    );
 
     if (!profile) {
       return res.status(404).json({
@@ -734,8 +699,8 @@ export const getProfile = async (req, res) => {
       message: "Profile fetched successfully",
       profile,
     });
-
   } catch (error) {
+    console.error("Get Profile Error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch profile",
@@ -747,7 +712,7 @@ export const getProfile = async (req, res) => {
 export const refreshTokenController = (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
-console.log("Refresh Token Request:", refreshToken);
+    console.log("Refresh Token Request:", refreshToken);
     if (!refreshToken) {
       return res.status(401).json({
         success: false,
@@ -758,10 +723,7 @@ console.log("Refresh Token Request:", refreshToken);
     let decoded;
 
     try {
-      decoded = jwt.verify(
-        refreshToken,
-        process.env.JWT_REFRESH_SECRET
-      );
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     } catch (err) {
       return res.status(403).json({
         success: false,
@@ -777,7 +739,6 @@ console.log("Refresh Token Request:", refreshToken);
       success: true,
       message: "Access token refreshed successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,

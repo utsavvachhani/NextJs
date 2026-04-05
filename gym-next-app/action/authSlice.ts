@@ -9,12 +9,15 @@ import {
   verifyResetOtpAPI, 
   resetPasswordAPI, 
   changePasswordAPI, 
-  logoutAPI 
+  logoutAPI,
+  getProfileAPI,
+  updateProfileAPI 
 } from "../api/authApi";
 import { showAlert } from "./alertSlice";
 
 interface AuthState {
   user: any;
+  profile: any;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
@@ -22,6 +25,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: typeof window !== "undefined" ? (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null) : null,
+  profile: null,
   loading: false,
   error: null,
   isAuthenticated: typeof window !== "undefined" ? !!localStorage.getItem("user") : false,
@@ -150,6 +154,33 @@ export const changePassword = createAsyncThunk(
   }
 );
 
+export const fetchUserProfile = createAsyncThunk(
+  "auth/fetchUserProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await getProfileAPI();
+      return data.profile;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Failed to fetch profile");
+    }
+  }
+);
+
+export const updateUserProfile = createAsyncThunk(
+  "auth/updateUserProfile",
+  async (formData: FormData, { rejectWithValue, dispatch }) => {
+    try {
+      const data = await updateProfileAPI(formData);
+      dispatch(showAlert({ message: "Profile updated successfully!", type: "success" }));
+      return data.profile;
+    } catch (err: any) {
+      const message = err.response?.data?.message || "Failed to update profile";
+      dispatch(showAlert({ message, type: "error" }));
+      return rejectWithValue(message);
+    }
+  }
+);
+
 export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { dispatch }) => {
@@ -246,9 +277,35 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
       })
+      // Fetch Profile
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.profile = action.payload;
+        // Also update user info if present in populated profile
+        if (action.payload.userId) {
+          state.user = {
+            ...state.user,
+            ...action.payload.userId,
+            _id: action.payload.userId._id || state.user._id
+          };
+          localStorage.setItem("user", JSON.stringify(state.user));
+        }
+      })
+      // Update Profile
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.profile = action.payload;
+        if (action.payload.userId) {
+          state.user = {
+            ...state.user,
+            ...action.payload.userId,
+            _id: action.payload.userId._id || state.user._id
+          };
+          localStorage.setItem("user", JSON.stringify(state.user));
+        }
+      })
       // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
+        state.profile = null;
         state.isAuthenticated = false;
       })
       // Global loading states for other actions

@@ -15,6 +15,8 @@ export default function VideoManagementPage() {
     const [videos, setVideos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
+    const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
 
     useEffect(() => {
         fetchVideos();
@@ -140,8 +142,8 @@ export default function VideoManagementPage() {
 
                             {message && (
                                 <div className={`p-4 rounded-xl text-sm font-medium border ${message.type === 'success'
-                                        ? 'bg-green-500/10 border-green-500/20 text-green-500'
-                                        : 'bg-red-500/10 border-red-500/20 text-red-500'
+                                    ? 'bg-green-500/10 border-green-500/20 text-green-500'
+                                    : 'bg-red-500/10 border-red-500/20 text-red-500'
                                     }`}>
                                     {message.text}
                                 </div>
@@ -177,48 +179,69 @@ export default function VideoManagementPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {videos.map((video) => (
                                     <div
                                         key={video._id}
-                                        className="group bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl overflow-hidden hover:border-[var(--brand-red)] transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
+                                        onMouseEnter={() => setHoveredVideo(video._id)}
+                                        onMouseLeave={() => setHoveredVideo(null)}
+                                        className="group bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl overflow-hidden hover:border-[var(--brand-red)] transition-all shadow-sm hover:shadow-2xl hover:-translate-y-1"
                                     >
-                                        <div className="relative aspect-video bg-black/50 group-hover:bg-black/40 transition-colors">
+                                        <div
+                                            className="relative aspect-video bg-black cursor-pointer"
+                                            onClick={() => setSelectedVideo(video)}
+                                        >
                                             <video
                                                 src={video.videoUrl}
                                                 className="w-full h-full object-cover"
                                                 poster={video.thumbnailUrl || ""}
+                                                muted
+                                                loop
+                                                playsInline
+                                                ref={(el) => {
+                                                    if (el) {
+                                                        if (hoveredVideo === video._id) {
+                                                            el.play().catch(() => { });
+                                                        } else {
+                                                            el.pause();
+                                                            el.currentTime = 0;
+                                                        }
+                                                    }
+                                                }}
                                             />
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <div className="w-14 h-14 bg-[var(--brand-red)] rounded-full flex items-center justify-center text-white shadow-2xl scale-75 group-hover:scale-100 transition-transform">
+                                            {/* Play Overlay */}
+                                            <div className={`absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity duration-300 ${hoveredVideo === video._id ? 'opacity-0' : 'opacity-100'}`}>
+                                                <div className="w-12 h-12 bg-[var(--brand-red)] rounded-full flex items-center justify-center text-white shadow-xl transform transition-transform group-hover:scale-110">
                                                     <PlayCircleOutlineIcon fontSize="large" />
                                                 </div>
                                             </div>
-                                            <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider">
-                                                NEW
+                                            <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-white">
+                                                LIVE PREVIEW
                                             </div>
                                         </div>
-                                        <div className="p-5 space-y-3">
-                                            <h3 className="font-bold text-lg leading-tight line-clamp-1 group-hover:text-[var(--brand-red)] transition-colors">
-                                                {video.title}
-                                            </h3>
-                                            <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded-full bg-[var(--brand-red)]/10 flex items-center justify-center text-[var(--brand-red)] font-bold">
-                                                        {video.userId?.name?.[0] || 'U'}
-                                                    </div>
-                                                    <span>{video.userId?.name || 'User'}</span>
+                                        <div className="p-4 space-y-4">
+                                            <div className="flex gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--brand-red)] to-red-700 flex flex-shrink-0 items-center justify-center text-white font-bold shadow-lg">
+                                                    {video.userId?.name?.[0] || 'U'}
                                                 </div>
-                                                <span>{new Date(video.createdAt).toLocaleDateString()}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-bold text-base leading-tight line-clamp-2 group-hover:text-[var(--brand-red)] transition-colors">
+                                                        {video.title}
+                                                    </h3>
+                                                    <div className="mt-1 flex flex-col text-xs text-[var(--text-muted)]">
+                                                        <span className="font-medium hover:text-[var(--text-primary)] cursor-pointer">
+                                                            {video.userId?.name || 'Coach Global'}
+                                                        </span>
+                                                        <span>{videos.length * 123} views • {new Date(video.createdAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <a
-                                                href={video.videoUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="block w-full text-center py-2.5 bg-[var(--bg-page)] border border-[var(--border-color)] rounded-xl text-sm font-bold hover:bg-[var(--brand-red)] hover:text-white hover:border-[var(--brand-red)] transition-all"
+                                            <button
+                                                onClick={() => setSelectedVideo(video)}
+                                                className="w-full py-2.5 bg-white/5 border border-[var(--border-color)] rounded-xl text-sm font-bold hover:bg-[var(--brand-red)] hover:text-white hover:border-[var(--brand-red)] transition-all"
                                             >
-                                                Watch Video
-                                            </a>
+                                                Watch in Theater
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -227,6 +250,114 @@ export default function VideoManagementPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Premium Theater Player (YouTube Style) */}
+            {selectedVideo && (
+                <div
+                    className="fixed inset-0 z-[100] bg-black/95 flex flex-col md:flex-row animate-in fade-in duration-500 overflow-y-auto"
+                >
+                    {/* Main Content Areas */}
+                    <div className="flex-1 flex flex-col h-full min-h-screen lg:min-h-0">
+                        {/* Player Header */}
+                        <div className="p-4 flex items-center justify-between border-b border-white/5">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setSelectedVideo(null)}
+                                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+                                >
+                                    ✕
+                                </button>
+                                <h2 className="text-white font-bold hidden sm:block">Playing: {selectedVideo.title}</h2>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[var(--brand-red)] text-xs font-bold bg-[var(--brand-red)]/10 px-3 py-1 rounded-full border border-[var(--brand-red)]/20 animate-pulse">
+                                    THEATER MODE
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Large Video Player */}
+                        <div className="relative w-full bg-black group flex-grow flex items-center">
+                            <video
+                                src={selectedVideo.videoUrl}
+                                controls
+                                autoPlay
+                                className="w-full max-h-full aspect-video shadow-2xl"
+                            />
+                        </div>
+
+                        {/* Video Info Section */}
+                        <div className="bg-[#0f0f0f] border-t border-white/5 p-6 space-y-6">
+                            <div className="space-y-4">
+                                <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">
+                                    {selectedVideo.title}
+                                </h1>
+                                <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-white/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--brand-red)] to-red-700 flex items-center justify-center text-white font-bold text-lg shadow-xl ring-2 ring-white/10">
+                                            {selectedVideo.userId?.name?.[0] || 'U'}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-white font-bold text-lg">{selectedVideo.userId?.name || 'Gym Master'}</h3>
+                                            <p className="text-[var(--text-muted)] text-sm">2.4M subscribers</p>
+                                        </div>
+                                        <button className="ml-4 px-6 py-2.5 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors">
+                                            Subscribe
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center bg-white/10 rounded-full overflow-hidden border border-white/5">
+                                            <button className="px-5 py-2 hover:bg-white/10 flex items-center gap-2 border-r border-white/10">
+                                                <span>👍</span> 12K
+                                            </button>
+                                            <button className="px-5 py-2 hover:bg-white/10">
+                                                <span>👎</span>
+                                            </button>
+                                        </div>
+                                        <button className="px-5 py-2 bg-white/10 hover:bg-white/20 rounded-full font-bold transition-all">
+                                            Share
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="bg-white/5 rounded-2xl p-4 text-sm text-gray-300 leading-relaxed">
+                                    <div className="font-bold mb-1">123,456 views • {new Date(selectedVideo.createdAt).toLocaleDateString()}</div>
+                                    <p>This is a professionally recorded workout video uploaded to the Fitness Platform.
+                                        Make sure to follow the techniques correctly for the best results! #Fitness #Workout #GymProgress</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sidebar Suggestions (YouTube Style) */}
+                    <div className="w-full md:w-80 lg:w-96 bg-[#0f0f0f] border-l border-white/5 p-4 space-y-4 overflow-y-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-white font-bold">Related Videos</h3>
+                            <button className="text-xs text-[var(--brand-red)] font-bold">Autoplay ON</button>
+                        </div>
+                        {videos.filter(v => v._id !== selectedVideo._id).concat(videos).slice(0, 10).map((v, i) => (
+                            <div
+                                key={`${v._id}-${i}`}
+                                className="flex gap-3 cursor-pointer group hover:bg-white/5 p-2 rounded-xl transition-all"
+                                onClick={() => {
+                                    setSelectedVideo(v);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                            >
+                                <div className="relative w-32 h-20 flex-shrink-0 bg-black rounded-lg overflow-hidden border border-white/5">
+                                    <video src={v.videoUrl} className="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
+                                    <div className="absolute bottom-1 right-1 bg-black/80 px-1 py-0.5 rounded text-[8px] text-white">4:20</div>
+                                </div>
+                                <div className="flex flex-col flex-1 min-w-0">
+                                    <h4 className="text-white text-sm font-bold line-clamp-2 leading-tight group-hover:text-[var(--brand-red)] transition-colors">
+                                        {v.title}
+                                    </h4>
+                                    <p className="text-[var(--text-muted)] text-[10px] mt-1">{v.userId?.name || 'Coach'} • 1.2M views</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
         .line-clamp-1 {

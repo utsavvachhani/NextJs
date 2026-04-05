@@ -6,7 +6,7 @@ import { Logo } from "@/assent"
 import { NAVBAR_LINKS, USER_MENU } from "@/constants/Navbar"
 import { useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { logout } from "@/action/authSlice"
+import { logout, fetchUserProfile } from "@/action/authSlice"
 import { RootState, AppDispatch } from "@/store"
 import { useRouter } from "next/navigation"
 import MenuIcon from '@mui/icons-material/Menu'
@@ -20,9 +20,8 @@ import ListAltIcon from '@mui/icons-material/ListAlt'
 function Navbar() {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
-    const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+    const { isAuthenticated, user, profile } = useSelector((state: RootState) => state.auth);
     const isUserLoggedIn = isAuthenticated;
-
 
     const [open, setOpen] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -32,6 +31,13 @@ function Navbar() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Fetch profile on mount if logged in
+    useEffect(() => {
+        if (isAuthenticated && !profile) {
+            dispatch(fetchUserProfile());
+        }
+    }, [isAuthenticated, profile, dispatch]);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -137,17 +143,14 @@ function Navbar() {
                                     onMouseEnter={() => setOpen(true)}
                                     onMouseLeave={() => setOpen(false)}
                                 >
-                                    {user?.image ? (
+                                    {profile?.photo ? (
                                         <Image
-                                            src={user.image}
+                                            src={profile.photo}
                                             alt="User avatar"
                                             width={36}
                                             height={36}
                                             className="rounded-full object-cover"
-                                            onError={(e) => {
-                                                // If image fails to load, we can set a flag or just let it fall back
-                                                // Since we don't have easy state here for each image, we might want a small component
-                                            }}
+                                            unoptimized // Since it's from Cloudinary, unoptimized is safer or use loader
                                         />
                                     ) : (
                                         <div className="h-9 w-9 rounded-full bg-[var(--brand-red)] flex items-center justify-center text-white font-bold text-lg">
@@ -173,33 +176,37 @@ function Navbar() {
 
                                             {/* menu links */}
                                             <div className="py-1">
-                                                {USER_MENU.map((item) => (
-                                                    item.label === "Sign Out" ? (
-                                                        <button
-                                                            key={item.label}
-                                                            onClick={handleLogout}
-                                                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-primary)] bg-transparent border-none cursor-pointer transition-all duration-200 hover:bg-[var(--bg-page)] hover:text-[var(--brand-red)]"
-                                                        >
-                                                            <div className="w-5 flex justify-center">
-                                                                <CloseIcon sx={{ fontSize: 18 }} />
-                                                            </div>
-                                                            {item.label}
-                                                        </button>
-                                                    ) : (
+                                                {USER_MENU.map((item) => {
+                                                    const Icon = item.icon;
+
+                                                    if (item.label === "Sign Out") {
+                                                        return (
+                                                            <button
+                                                                key={item.label}
+                                                                onClick={handleLogout}
+                                                                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-primary)] bg-transparent border-none cursor-pointer transition-all duration-200 hover:bg-[var(--bg-page)] hover:text-[var(--brand-red)]"
+                                                            >
+                                                                <div className="w-5 flex justify-center">
+                                                                    <Icon sx={{ fontSize: 18 }} />
+                                                                </div>
+                                                                {item.label}
+                                                            </button>
+                                                        );
+                                                    }
+
+                                                    return (
                                                         <Link
                                                             key={item.label}
                                                             href={item.href}
                                                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-primary)] no-underline transition-all duration-200 hover:bg-[var(--bg-page)] hover:text-[var(--brand-red)]"
                                                         >
                                                             <div className="w-5 flex justify-center text-[var(--text-secondary)] group-hover:text-[var(--brand-red)]">
-                                                                {item.label === "Profile" && <AssignmentIndIcon sx={{ fontSize: 18 }} />}
-                                                                {item.label === "Dashboard" && <FitnessCenterIcon sx={{ fontSize: 18 }} />}
-                                                                {item.label === "Todo" && <ListAltIcon sx={{ fontSize: 18 }} />}
+                                                                <Icon sx={{ fontSize: 18 }} />
                                                             </div>
                                                             {item.label}
                                                         </Link>
-                                                    )
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </div>
@@ -258,13 +265,14 @@ function Navbar() {
                             isUserLoggedIn ? (
                                 <div>
                                     <div className="flex items-center gap-3 mb-6 p-4 bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)]">
-                                        {user?.image ? (
+                                        {profile?.photo ? (
                                             <Image
-                                                src={user.image}
+                                                src={profile.photo}
                                                 alt="User avatar"
                                                 width={48}
                                                 height={48}
                                                 className="rounded-full object-cover"
+                                                unoptimized
                                             />
                                         ) : (
                                             <div className="h-12 w-12 rounded-full bg-[var(--brand-red)] flex items-center justify-center text-white font-bold text-2xl">
@@ -281,30 +289,30 @@ function Navbar() {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        {USER_MENU.map((item) => (
-                                            item.label === "Sign Out" ? (
+                                        {USER_MENU.map((item) => {
+                                            const Icon = item.icon;
+
+                                            return item.label === "Sign Out" ? (
                                                 <button
                                                     key={item.label}
                                                     onClick={handleLogout}
                                                     className="flex w-full items-center gap-4 px-4 py-3.5 text-[var(--text-primary)] bg-transparent border-none cursor-pointer rounded-xl transition-all duration-200 hover:bg-[var(--bg-page)] hover:text-[var(--brand-red)]"
                                                 >
-                                                    <CloseIcon fontSize="small" />
+                                                    <Icon fontSize="small" />
                                                     <span className="font-medium">{item.label}</span>
                                                 </button>
                                             ) : (
                                                 <Link
                                                     key={item.label}
                                                     href={item.href}
-                                                    className="flex items-center gap-4 px-4 py-3.5 text-[var(--text-primary)] no-underline rounded-xl transition-all duration-200 hover:bg-[var(--bg-page)] hover:text-[var(--brand-red)]"
                                                     onClick={handleLinkClick}
+                                                    className="flex items-center gap-4 px-4 py-3.5 text-[var(--text-primary)] no-underline rounded-xl transition-all duration-200 hover:bg-[var(--bg-page)] hover:text-[var(--brand-red)]"
                                                 >
-                                                    {item.label === "Profile" && <AssignmentIndIcon fontSize="small" />}
-                                                    {item.label === "Dashboard" && <FitnessCenterIcon fontSize="small" />}
-                                                    {item.label === "Todo" && <ListAltIcon fontSize="small" />}
+                                                    <Icon fontSize="small" />
                                                     <span className="font-medium">{item.label}</span>
                                                 </Link>
-                                            )
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             ) : (

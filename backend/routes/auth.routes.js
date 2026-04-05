@@ -14,7 +14,8 @@ import {
   refreshTokenController,
 } from "../controllers/auth.controller.js";
 
-import {authMiddleware} from "../middleware/auth.middleware.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
+import profileUpload from "../middleware/profileUpload.middleware.js";
 
 const router = express.Router();
 
@@ -26,12 +27,17 @@ router.post("/signin", signin);
 router.post("/logout", logout);
 
 router.post("/forgot-password", forgotPassword);
-router.post("/verify-reset-otp", verifyResetOtp );
+router.post("/verify-reset-otp", verifyResetOtp);
 router.post("/reset-password", resetPassword);
 
-
 router.post("/change-password", changePassword);
-router.put("/profile/update", authMiddleware, updateProfile);
+
+router.put(
+  "/profile/update",
+  authMiddleware,
+  profileUpload.single("photo"),
+  updateProfile,
+);
 router.get("/profile", authMiddleware, getProfile);
 
 router.post("/refresh-token", refreshTokenController);

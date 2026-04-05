@@ -59,6 +59,20 @@ export const changePasswordAPI = async (data: any) => {
   return response.data;
 };
 
+export const getProfileAPI = async () => {
+  const response = await axiosInstance.get("/auth/profile");
+  return response.data;
+};
+
+export const updateProfileAPI = async (formData: FormData) => {
+  const response = await axiosInstance.put("/auth/profile/update", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
 export const refreshTokenAPI = async () => {
   const response = await axiosInstance.post("/auth/refresh-token");
   return response.data;
